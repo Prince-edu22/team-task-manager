@@ -10,9 +10,15 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+ useEffect(() => {
+  fetchDashboardData();
+  
+  // Optional: refetch when window gets focus (user comes back from Tasks)
+  const handleFocus = () => fetchDashboardData();
+  window.addEventListener('focus', handleFocus);
+  
+  return () => window.removeEventListener('focus', handleFocus);
+}, []);
 
   const fetchDashboardData = async () => {
     try {

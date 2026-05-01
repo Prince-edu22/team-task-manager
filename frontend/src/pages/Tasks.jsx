@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Edit2, Trash2, Filter, Calendar, User } from 'lucide-react';
+import { Plus, Edit2, Trash2, Calendar, User } from 'lucide-react';
 import { format } from 'date-fns';
 
 const Tasks = () => {
@@ -41,9 +41,12 @@ const Tasks = () => {
       setTasks(tasksRes.data.tasks);
       setProjects(projectsRes.data.projects);
       
+      // Optional: if you need user list for admin filtering, add a backend endpoint `/api/users`
+      // For now, keep empty array to avoid 404 errors
       if (user?.role === 'ADMIN') {
-        const usersRes = await api.get('/users'); // You'd need to add this endpoint
-        setUsers(usersRes?.data?.users || []);
+        // const usersRes = await api.get('/users');
+        // setUsers(usersRes?.data?.users || []);
+        setUsers([]);
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -109,6 +112,16 @@ const Tasks = () => {
       COMPLETED: 'bg-green-500',
     };
     return colors[status] || 'bg-gray-500';
+  };
+
+  // 🔧 FIX: Added missing getStatusBadge function for read-only badge styling
+  const getStatusBadge = (status) => {
+    const badges = {
+      TODO: 'bg-gray-500/20 text-gray-300',
+      IN_PROGRESS: 'bg-blue-500/20 text-blue-300',
+      COMPLETED: 'bg-green-500/20 text-green-300',
+    };
+    return badges[status] || 'bg-gray-500/20 text-gray-300';
   };
 
   if (loading) {
@@ -228,27 +241,37 @@ const Tasks = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <select
-                    value={task.status}
-                    onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                    className="px-3 py-1 bg-white/10 border border-white/20 rounded text-white text-sm"
-                  >
-                    <option value="TODO">Todo</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="COMPLETED">Completed</option>
-                  </select>
-                  <button
-                    onClick={() => handleEdit(task)}
-                    className="p-2 hover:bg-white/10 rounded transition"
-                  >
-                    <Edit2 size={16} className="text-gray-400" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(task.id)}
-                    className="p-2 hover:bg-white/10 rounded transition"
-                  >
-                    <Trash2 size={16} className="text-red-400" />
-                  </button>
+                  {/* Permission check: Admin OR task assigned to current user */}
+                  {(user?.role === 'ADMIN' || task.assignedUserId === user?.id) ? (
+                    <>
+                      <select
+                        value={task.status}
+                        onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                        className="px-3 py-1 bg-white/10 border border-white/20 rounded text-white text-sm"
+                      >
+                        <option value="TODO">Todo</option>
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="COMPLETED">Completed</option>
+                      </select>
+                      <button
+                        onClick={() => handleEdit(task)}
+                        className="p-2 hover:bg-white/10 rounded transition"
+                      >
+                        <Edit2 size={16} className="text-gray-400" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(task.id)}
+                        className="p-2 hover:bg-white/10 rounded transition"
+                      >
+                        <Trash2 size={16} className="text-red-400" />
+                      </button>
+                    </>
+                  ) : (
+                    /* Show only status badge (read-only) for other users' tasks */
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(task.status)}`}>
+                      {task.status.replace('_', ' ')}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
