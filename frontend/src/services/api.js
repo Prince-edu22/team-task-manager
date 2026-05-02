@@ -10,10 +10,9 @@ const getBaseURL = () => {
 };
 
 const api = axios.create({
-  baseURL: getBaseURL(),
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: 'https://team-task-managers-dwmw.onrender.com/api',
+  headers: { 'Content-Type': 'application/json' },
+  withCredentials: true  
 });
 
 api.interceptors.request.use(

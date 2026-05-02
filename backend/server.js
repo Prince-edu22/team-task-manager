@@ -17,18 +17,21 @@ const app = express();
 
 app.use(helmet());
 
-// 🔄 REPLACE THIS LINE:
-// app.use(cors());
-
-// ✅ WITH THIS:
+// CORS configuration
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://team-task-manager2-mjvn.onrender.com'], // Add your frontend URLs
+  origin: [
+    'http://localhost:3000', 
+    'https://team-task-manager2-mjvn.onrender.com'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
+
+// Handle preflight requests
+app.options('*', cors());
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -40,7 +43,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
 
