@@ -77,6 +77,25 @@ export const updateTask = async (req, res, next) => {
     const { id } = req.params;
     const { title, description, assignedUserId, status, dueDate } = req.body;
     
+    // First, fetch the task to check ownership/permissions
+    const existingTask = await prisma.task.findUnique({
+      where: { id: parseInt(id) },
+      include: { project: true }
+    });
+    
+    if (!existingTask) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    
+    // Check permissions: Admin OR assigned user
+    const isAdmin = req.user.role === 'ADMIN';
+    const isAssignedUser = existingTask.assignedUserId === req.user.id;
+    
+    if (!isAdmin && !isAssignedUser) {
+      return res.status(403).json({ message: 'You can only update your own tasks' });
+    }
+    
+    // Perform update
     const task = await prisma.task.update({
       where: { id: parseInt(id) },
       data: {
@@ -100,6 +119,22 @@ export const updateTask = async (req, res, next) => {
 export const deleteTask = async (req, res, next) => {
   try {
     const { id } = req.params;
+    
+    // Fetch task to check permissions
+    const existingTask = await prisma.task.findUnique({
+      where: { id: parseInt(id) }
+    });
+    
+    if (!existingTask) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    
+    const isAdmin = req.user.role === 'ADMIN';
+    const isAssignedUser = existingTask.assignedUserId === req.user.id;
+    
+    if (!isAdmin && !isAssignedUser) {
+      return res.status(403).json({ message: 'You can only delete your own tasks' });
+    }
     
     await prisma.task.delete({
       where: { id: parseInt(id) }
