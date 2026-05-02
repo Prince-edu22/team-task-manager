@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Use the FULL backend URL - no relative paths
-const API_BASE_URL = 'https://team-task-managers-dwmw.onrender.com';
+const API_BASE_URL = 'https://team-task-managers-dwmw.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
