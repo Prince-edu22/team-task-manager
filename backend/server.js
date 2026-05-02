@@ -15,6 +15,10 @@ dotenv.config();
 export const prisma = new PrismaClient();
 const app = express();
 
+app.get('/ping', (req, res) => {
+  res.json({ message: 'Server is alive!' });
+});
+
 app.use(helmet());
 
 // CORS configuration
