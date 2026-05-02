@@ -1,32 +1,68 @@
+// import express from 'express';
+// import cors from 'cors';
+// import helmet from 'helmet';
+// import dotenv from 'dotenv';
+// import { PrismaClient } from '@prisma/client';
+
+// import authRoutes from './routes/authRoutes.js';
+// import projectRoutes from './routes/projectRoutes.js';
+// import taskRoutes from './routes/taskRoutes.js';
+// import dashboardRoutes from './routes/dashboardRoutes.js';
+// import { errorHandler } from './middleware/errorHandler.js';
+
+// dotenv.config();
+
+// export const prisma = new PrismaClient();
+// const app = express();
+
+// app.get('/ping', (req, res) => {
+//   res.json({ message: 'Server is alive!' });
+// });
+
+// app.use(helmet());
+
+// // CORS configuration
+// app.use(cors({
+//   origin: [
+//     'http://localhost:3000', 
+//     'https://team-task-manager2-mjvn.onrender.com'
+//   ],
+//   credentials: true,
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization']
+// }));
+
+// app.use(express.json());
+
+// // Handle preflight requests
+// app.options('*', cors());
+
+// // Routes
+// app.use('/api/auth', authRoutes);
+// app.use('/api/projects', projectRoutes);
+// app.use('/api/tasks', taskRoutes);
+// app.use('/api/dashboard', dashboardRoutes);
+
+// // Error handling
+// app.use(errorHandler);
+
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, '0.0.0.0', () => {
+//   console.log(`Server running on port ${PORT}`);
+// });
+
+// export default app;
 import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
-
-import authRoutes from './routes/authRoutes.js';
-import projectRoutes from './routes/projectRoutes.js';
-import taskRoutes from './routes/taskRoutes.js';
-import dashboardRoutes from './routes/dashboardRoutes.js';
-import { errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
 
-export const prisma = new PrismaClient();
 const app = express();
 
-app.get('/ping', (req, res) => {
-  res.json({ message: 'Server is alive!' });
-});
-
-app.use(helmet());
-
-// CORS configuration
+// CORS - Allow everything for testing
 app.use(cors({
-  origin: [
-    'http://localhost:3000', 
-    'https://team-task-manager2-mjvn.onrender.com'
-  ],
+  origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -34,17 +70,28 @@ app.use(cors({
 
 app.use(express.json());
 
-// Handle preflight requests
-app.options('*', cors());
+// Test route - This will confirm API is working
+app.post('/api/auth/login', (req, res) => {
+  console.log('Login endpoint hit!', req.body);
+  res.json({ 
+    success: true, 
+    message: 'Login endpoint is working!',
+    received: req.body 
+  });
+});
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/tasks', taskRoutes);
-app.use('/api/dashboard', dashboardRoutes);
+app.post('/api/auth/register', (req, res) => {
+  console.log('Register endpoint hit!', req.body);
+  res.json({ 
+    success: true, 
+    message: 'Register endpoint is working!',
+    received: req.body 
+  });
+});
 
-// Error handling
-app.use(errorHandler);
+app.get('/ping', (req, res) => {
+  res.json({ message: 'Server is alive!' });
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
