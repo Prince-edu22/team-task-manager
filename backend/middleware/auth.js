@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { prisma } from '../server.js';
+import { pool } from '../utils/db.js';
 
 export const protect = async (req, res, next) => {
   let token;
@@ -14,10 +14,11 @@ export const protect = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
-      select: { id: true, email: true, name: true, role: true }
-    });
+    const userResult = await pool.query(
+      'SELECT id, email, name, role FROM users WHERE id = $1',
+      [decoded.id]
+    );
+    const user = userResult.rows[0];
     
     if (!user) {
       return res.status(401).json({ message: 'User not found' });

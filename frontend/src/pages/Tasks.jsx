@@ -41,12 +41,10 @@ const Tasks = () => {
       setTasks(tasksRes.data.tasks);
       setProjects(projectsRes.data.projects);
       
-      // Optional: if you need user list for admin filtering, add a backend endpoint `/api/users`
-      // For now, keep empty array to avoid 404 errors
+      // Fetch user list for admin filtering from the new /auth/users endpoint
       if (user?.role === 'ADMIN') {
-        // const usersRes = await api.get('/users');
-        // setUsers(usersRes?.data?.users || []);
-        setUsers([]);
+        const usersRes = await api.get('/auth/users');
+        setUsers(usersRes?.data?.users || []);
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);

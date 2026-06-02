@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
-import { prisma } from '../server.js';
+import { pool } from '../utils/db.js';
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -18,22 +18,18 @@ export const register = async (req, res, next) => {
 
     const { email, password, name, role } = req.body;
     
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
+    const existingUserResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (existingUserResult.rows.length > 0) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(password, parseInt(process.env.BCRYPT_ROUNDS));
     
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-        role: role || 'MEMBER'
-      },
-      select: { id: true, email: true, name: true, role: true }
-    });
+    const insertResult = await pool.query(
+      'INSERT INTO users (email, password, name, role) VALUES ($1, $2, $3, $4) RETURNING id, email, name, role',
+      [email, hashedPassword, name, role || 'MEMBER']
+    );
+    const user = insertResult.rows[0];
 
     const token = generateToken(user.id);
     
@@ -56,7 +52,8 @@ export const login = async (req, res, next) => {
 
     const { email, password } = req.body;
     
-    const user = await prisma.user.findUnique({ where: { email } });
+    const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = userResult.rows[0];
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -78,6 +75,17 @@ export const login = async (req, res, next) => {
         role: user.role
       }
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUsers = async (req, res, next) => {
+  try {
+    const usersResult = await pool.query(
+      'SELECT id, name, email, role FROM users ORDER BY name ASC'
+    );
+    res.json({ success: true, users: usersResult.rows });
   } catch (error) {
     next(error);
   }

@@ -12,6 +12,12 @@ const Projects = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
+  // Team/Member management state
+  const [showMembersModal, setShowMembersModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [allSystemUsers, setAllSystemUsers] = useState([]);
+  const [selectedUserIdToAdd, setSelectedUserIdToAdd] = useState('');
+
   useEffect(() => {
     fetchProjects();
   }, []);
@@ -20,10 +26,54 @@ const Projects = () => {
     try {
       const response = await api.get('/projects');
       setProjects(response.data.projects);
+      
+      // Update selected project modal data in real-time
+      if (selectedProject) {
+        const updatedProj = response.data.projects.find(p => p.id === selectedProject.id);
+        if (updatedProj) {
+          setSelectedProject(updatedProj);
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch projects:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOpenMembersModal = async (project) => {
+    setSelectedProject(project);
+    setShowMembersModal(true);
+    try {
+      const response = await api.get('/auth/users');
+      setAllSystemUsers(response.data.users || []);
+    } catch (error) {
+      console.error('Failed to fetch system users:', error);
+    }
+  };
+
+  const handleAddMember = async (e) => {
+    e.preventDefault();
+    if (!selectedUserIdToAdd) return;
+    try {
+      await api.post(`/projects/${selectedProject.id}/members`, { userId: parseInt(selectedUserIdToAdd) });
+      setSelectedUserIdToAdd('');
+      await fetchProjects();
+    } catch (error) {
+      console.error('Failed to add member:', error);
+      alert(error.response?.data?.message || 'Failed to add member');
+    }
+  };
+
+  const handleRemoveMember = async (userId) => {
+    if (confirm('Are you sure you want to remove this member from the project?')) {
+      try {
+        await api.delete(`/projects/${selectedProject.id}/members/${userId}`);
+        await fetchProjects();
+      } catch (error) {
+        console.error('Failed to remove member:', error);
+        alert(error.response?.data?.message || 'Failed to remove member');
+      }
     }
   };
 
@@ -133,7 +183,10 @@ const Projects = () => {
               <span className="text-gray-300 text-sm">
                 {project.tasks?.length || 0} tasks
               </span>
-              <button className="flex items-center gap-1 text-blue-400 hover:text-blue-300 text-sm">
+              <button
+                onClick={() => handleOpenMembersModal(project)}
+                className="flex items-center gap-1 text-blue-400 hover:text-blue-300 text-sm"
+              >
                 View Details <ChevronRight size={14} />
               </button>
             </div>
@@ -187,6 +240,113 @@ const Projects = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Team/Members Management Modal */}
+      {showMembersModal && selectedProject && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="glass-card max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold text-white mb-2">
+              {selectedProject.name}
+            </h2>
+            <p className="text-gray-300 text-sm mb-6">
+              Manage team members and roles for this project.
+            </p>
+
+            {/* Current Members List */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-white mb-3">Project Members</h3>
+              <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                {selectedProject.members?.length === 0 ? (
+                  <p className="text-gray-400 text-sm">No members assigned yet.</p>
+                ) : (
+                  selectedProject.members?.map((m) => (
+                    <div key={m.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold text-sm">
+                          {m.user?.name?.[0]?.toUpperCase() || 'U'}
+                        </div>
+                        <div>
+                          <p className="text-white text-sm font-medium">{m.user?.name}</p>
+                          <p className="text-gray-400 text-xs">{m.user?.email}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        {m.userId === selectedProject.ownerId ? (
+                          <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-300 text-xs rounded border border-yellow-500/35 font-medium">
+                            Owner
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 bg-white/10 text-gray-300 text-xs rounded border border-white/5 font-medium">
+                            {m.user?.role || 'MEMBER'}
+                          </span>
+                        )}
+
+                        {/* Admin Action: Remove member (except owner) */}
+                        {user?.role === 'ADMIN' && m.userId !== selectedProject.ownerId && (
+                          <button
+                            onClick={() => handleRemoveMember(m.userId)}
+                            className="p-1 hover:bg-white/10 rounded text-red-400 transition"
+                            title="Remove from project"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Add New Member Section (ADMIN Only) */}
+            {user?.role === 'ADMIN' && (
+              <div className="pt-4 border-t border-white/10 mb-6">
+                <h3 className="text-lg font-semibold text-white mb-3">Add Team Member</h3>
+                <form onSubmit={handleAddMember} className="flex gap-3">
+                  <div className="flex-1">
+                    <select
+                      value={selectedUserIdToAdd}
+                      onChange={(e) => setSelectedUserIdToAdd(e.target.value)}
+                      className="input-glass text-sm py-2"
+                      required
+                    >
+                      <option value="">Select a user...</option>
+                      {allSystemUsers
+                        .filter(u => !selectedProject.members?.some(m => m.userId === u.id))
+                        .map(u => (
+                          <option key={u.id} value={u.id}>
+                            {u.name} ({u.email} - {u.role})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg text-sm font-semibold transition"
+                  >
+                    Add
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* Close Button */}
+            <div className="flex justify-end pt-4 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowMembersModal(false);
+                  setSelectedProject(null);
+                }}
+                className="px-5 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-semibold transition"
+              >
+                Close Details
+              </button>
+            </div>
           </div>
         </div>
       )}

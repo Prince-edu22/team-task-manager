@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
+import { initDB } from './utils/db.js';
 
 import authRoutes from './routes/authRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
@@ -12,7 +12,11 @@ import { errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
 
-export const prisma = new PrismaClient();
+// Initialize SQL Database
+initDB().catch(err => {
+  console.error('Failed to initialize database on startup:', err);
+});
+
 const app = express();
 
 app.get('/ping', (req, res) => {
@@ -23,10 +27,7 @@ app.use(helmet());
 
 // CORS configuration
 app.use(cors({
-  origin: [
-    'http://localhost:3000', 
-    'https://team-task-manager2-mjvn.onrender.com'
-  ],
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
