@@ -10,15 +10,22 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (token && userData) {
+  const token = localStorage.getItem('token');
+  const userData = localStorage.getItem('user');
+
+  if (token && userData && userData !== 'undefined') {
+    try {
       setUser(JSON.parse(userData));
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } catch (error) {
+      console.error('Invalid user data in localStorage');
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
     }
-    setLoading(false);
-  }, []);
+  }
+
+  setLoading(false);
+}, []);
 
   const login = async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
