@@ -1,8 +1,7 @@
 # Team Task Manager – Full Stack Project Management App
 
-A modern team task manager with project management, task assignments, role-based access (Admin/Member), and a beautiful glassmorphism UI. Built with React, Node.js, Express, Prisma, and SQLite/PostgreSQL.
+A modern team task manager with project management, task assignments, role-based access (Admin/Member), and a beautiful glassmorphism UI. Built with React, Node.js, Express,and SQLite/PostgreSQL.
 
-![Screenshot of Dashboard](./screenshot-placeholder.png)
 
 ## 🚀 Features
 
@@ -26,10 +25,9 @@ A modern team task manager with project management, task assignments, role-based
 
 ### Backend
 - Node.js + Express
-- Prisma ORM
 - SQLite (default) / PostgreSQL / MySQL
 - JWT authentication
-- bcrypt
+- bcryptjs
 - express-validator
 
 ## 📦 Installation
