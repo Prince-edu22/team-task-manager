@@ -49,7 +49,7 @@ const Login = () => {
                 <span className="font-medium text-white">Email:</span> demo@example.com
               </p>
               <p>
-                <span className="font-medium text-white">Password:</span> password123
+                <span className="font-medium text-white">Password:</span> Password123
               </p>
             </div>
           </div>
