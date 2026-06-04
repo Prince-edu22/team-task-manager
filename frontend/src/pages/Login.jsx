@@ -16,7 +16,7 @@ const Login = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    
+
     try {
       await login(email, password);
       navigate('/dashboard');
@@ -39,14 +39,28 @@ const Login = () => {
             </h2>
             <p className="text-gray-300 mt-2">Sign in to your account</p>
           </div>
-          
+
+          <div className="mt-4 mb-6 bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+            <h3 className="text-blue-400 font-semibold text-sm mb-2">
+              Demo Credentials
+            </h3>
+            <div className="text-gray-300 text-sm space-y-1">
+              <p>
+                <span className="font-medium text-white">Email:</span> demo@example.com
+              </p>
+              <p>
+                <span className="font-medium text-white">Password:</span> password123
+              </p>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm">
                 {error}
               </div>
             )}
-            
+
             <div>
               <input
                 type="email"
@@ -57,7 +71,7 @@ const Login = () => {
                 required
               />
             </div>
-            
+
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -75,7 +89,7 @@ const Login = () => {
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
-            
+
             <button
               type="submit"
               disabled={loading}
@@ -91,7 +105,7 @@ const Login = () => {
               )}
             </button>
           </form>
-          
+
           <p className="text-center text-gray-400 mt-6">
             Don't have an account?{' '}
             <Link to="/signup" className="text-blue-400 hover:text-blue-300 font-medium">
